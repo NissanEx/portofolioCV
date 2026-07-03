@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Sandy Wiraabdy - Software Engineer</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -311,10 +312,13 @@
             flex-shrink: 0;
         }
 
-        .cv-video-box iframe {
+        .cv-video-box iframe,
+        .cv-video-box video {
             width: 100%;
             height: 100%;
             border: none;
+            object-fit: cover;
+            background: #000;
         }
  
         .cv-icons-row {
@@ -481,7 +485,7 @@
             <!-- Layer 2: Tulisan Nama -->
             <img src="nama.png" alt="Sandy Wiraabdy Text" class="layer-name" id="layerName" onerror="this.src='https://placehold.co/1200x400/transparent/eee?text=nama.png+Missing'">
             
-            <!-- Layer 3: Karakter Utama (kini bereaksi saat di-hover, bukan diklik) -->
+            <!-- Layer 3: Karakter Utama -->
             <img src="char.png" alt="Sandy Wiraabdy Character" class="layer-char" id="layerChar" onerror="this.src='https://placehold.co/600x1000/transparent/999?text=char.png+Missing'">
         </div>
     </div>
@@ -490,7 +494,7 @@
     <button class="about-button" id="aboutBtn">About</button>
  
     <div class="cv-panel" id="cvPanel">
-        <!-- Kolom Kiri: Menggunakan char1.png sesuai permintaan -->
+        <!-- Kolom Kiri -->
         <div class="cv-left">
             <img src="char1.png" id="panelCharImg" alt="Sandy" onerror="this.src='https://placehold.co/800x1200/eee/999?text=char1.png+Missing'">
         </div>
@@ -518,9 +522,12 @@
                 <span class="cv-dash" data-index="4"></span>
             </div>
 
-            <!-- Panel Video YouTube -->
+            <!-- Panel Video Showcase (File MP4 Lokal) -->
             <div class="cv-video-box">
-                <iframe src="https://youtu.be/yXCb85Wc7gE?si=ta_rNwESVQs1pdkg" title="Sandy Wiraabdy Showcase Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                <video id="videoFrame" controls playsinline preload="metadata" poster="char1.png">
+                    <source src="showcase.mp4" type="video/mp4">
+                    Browser kamu tidak mendukung tag video.
+                </video>
             </div>
  
             <!-- Ikon SVG Modern -->
@@ -640,10 +647,6 @@
         const objectiveBox = document.querySelector('.cv-objective-box');
 
         // --- Penyesuai Tinggi Otomatis ---
-        // Mengukur tinggi kalimat TERPANJANG di antara semua slide, lalu mengunci
-        // min-height box sebesar itu. Dengan begini box selalu cukup besar untuk
-        // menampung slide apa pun (Objective, Experience, dst) tanpa ada teks yang
-        // keluar/terpotong dari panel hitam, di breakpoint/ukuran layar manapun.
         function calcOptimalBoxHeight() {
             if (!objectiveBox) return;
 
@@ -653,9 +656,6 @@
             const paddingLeft = parseFloat(style.paddingLeft) || 0;
             const paddingRight = parseFloat(style.paddingRight) || 0;
 
-            // Elemen sementara untuk mengukur, ditempatkan di dalam box itu sendiri
-            // supaya otomatis mewarisi aturan CSS ".cv-objective-box h3/p" yang
-            // berlaku di breakpoint saat ini (desktop/tablet/mobile).
             const measurer = document.createElement('div');
             measurer.style.position = 'absolute';
             measurer.style.visibility = 'hidden';
@@ -690,14 +690,10 @@
         calcOptimalBoxHeight();
         window.addEventListener('load', calcOptimalBoxHeight);
 
-        // Hitung ulang setelah font custom (Space Grotesk/Inter) selesai dimuat,
-        // karena lebar/tinggi teks bisa berubah begitu font aslinya aktif.
         if (document.fonts && document.fonts.ready) {
             document.fonts.ready.then(calcOptimalBoxHeight);
         }
 
-        // Hitung ulang saat ukuran layar berubah (mis. putar HP, resize desktop),
-        // dengan debounce supaya tidak dipanggil berlebihan.
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
@@ -742,22 +738,18 @@
  
         // Logika Pengunduhan File PDF Fisik secara Otomatis
         document.getElementById('downloadBtn').addEventListener('click', () => {
-            // Tentukan nama file target dari folder yang sama
             const targetPdf = 'sandywiraabdy.pdf';
 
             try {
-                // Membuat elemen anchor sementara
                 const link = document.createElement('a');
                 link.href = targetPdf;
                 link.download = 'sandywiraabdy.pdf';
                 
-                // Menambahkan elemen ke DOM secara instan, memicu klik, lalu menghapusnya kembali
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             } catch (error) {
                 console.error("Gagal melakukan pengunduhan langsung, mencoba redirect fallback.", error);
-                // Fallback jika eksekusi tautan dinamis gagal (misalnya di lingkungan iFrame tertentu)
                 window.open(targetPdf, '_blank');
             }
         });
