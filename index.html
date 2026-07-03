@@ -297,6 +297,25 @@
         .cv-dash.active {
             background: #000;
         }
+
+        /* Panel Video YouTube */
+        .cv-video-box {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            border: 2px solid #000;
+            flex-shrink: 0;
+        }
+
+        .cv-video-box iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
  
         .cv-icons-row {
             display: flex;
@@ -353,6 +372,17 @@
             color: #555;
             font-weight: 400;
         }
+
+        .cv-contact-info a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .cv-contact-info a:hover {
+            color: #000;
+            text-decoration: underline;
+        }
  
         .overlay {
             position: fixed;
@@ -407,6 +437,7 @@
             .layer-char { height: 72vh; }
             .layer-name { width: 92%; }
             .cv-icon-btn { width: 48px; height: 48px; }
+            .cv-video-box { margin-bottom: 20px; }
         }
 
         /* HP kecil / potret sempit */
@@ -486,11 +517,16 @@
                 <span class="cv-dash" data-index="3"></span>
                 <span class="cv-dash" data-index="4"></span>
             </div>
+
+            <!-- Panel Video YouTube -->
+            <div class="cv-video-box">
+                <iframe src="https://youtu.be/yXCb85Wc7gE?si=ta_rNwESVQs1pdkg" title="Sandy Wiraabdy Showcase Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
  
             <!-- Ikon SVG Modern -->
             <div class="cv-icons-row">
                 <!-- Headphone Icon (SVG) -->
-                <button class="cv-icon-btn" title="Contact">
+                <button class="cv-icon-btn" title="Contact" id="contactBtn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
                         <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
@@ -508,7 +544,7 @@
  
             <div class="cv-contact-info">
                 <p>Kalumbatan, Indonesia.</p>
-                <p>+62 822-6106-8992</p>
+                <p><a href="https://wa.me/6282261068992?text=Hallo%20Sandy%20Saya%20merekrut%20anda" target="_blank" title="Kirim WhatsApp">+62 822-6106-8992</a></p>
                 <p>sandybojes223@gmail.com</p>
                 <p>www.reallygreatsite.com</p>
             </div>
@@ -704,78 +740,32 @@
             }, 5000);
         }
  
-        // PDF Auto-Generator Logic
+        // Logika Pengunduhan File PDF Fisik secara Otomatis
         document.getElementById('downloadBtn').addEventListener('click', () => {
+            // Tentukan nama file target dari folder yang sama
+            const targetPdf = 'sandywiraabdy.pdf';
+
             try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
- 
-                // Header PDF
-                doc.setFillColor(0, 0, 0); 
-                doc.rect(0, 0, 210, 40, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(24);
-                doc.text("SANDY WIRAAABDY PELONG", 105, 20, null, null, "center");
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(12);
-                doc.text("Software Engineer", 105, 30, null, null, "center");
- 
-                // Content PDF
-                doc.setTextColor(0, 0, 0);
-                let yPos = 60;
+                // Membuat elemen anchor sementara
+                const link = document.createElement('a');
+                link.href = targetPdf;
+                link.download = 'sandywiraabdy.pdf';
                 
-                cvData.forEach(item => {
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(14);
-                    doc.text(item.title.toUpperCase(), 20, yPos);
-                    yPos += 8;
-                    
-                    doc.setDrawColor(200, 200, 200);
-                    doc.line(20, yPos, 190, yPos);
-                    yPos += 8;
- 
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(11);
-                    const splitText = doc.splitTextToSize(item.desc, 170);
-                    doc.text(splitText, 20, yPos);
-                    
-                    yPos += (splitText.length * 6) + 12;
-                });
- 
-                // Footer PDF
-                doc.setFillColor(240, 240, 240);
-                doc.rect(0, 270, 210, 27, 'F');
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(10);
-                doc.text("CONTACT", 105, 278, null, null, "center");
-                
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(9);
-                doc.text("Kalumbatan, Indonesia | +62 822-6106-8992 | sandybojes223@gmail.com | www.reallygreatsite.com", 105, 285, null, null, "center");
- 
-                doc.save('Sandy_Wiraabdy_CV.pdf');
-                
+                // Menambahkan elemen ke DOM secara instan, memicu klik, lalu menghapusnya kembali
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             } catch (error) {
-                console.error("PDF Library gagal dimuat. Fallback ke TXT.", error);
-                
-                // Fallback TXT Download
-                let textContent = "SANDY WIRAAABDY PELONG\nSoftware Engineer\n\n";
-                cvData.forEach(item => {
-                    textContent += `[ ${item.title.toUpperCase()} ]\n${item.desc}\n\n`;
-                });
-                textContent += "CONTACT:\nKalumbatan, Indonesia.\n+62 822-6106-8992\nsandybojes223@gmail.com\nwww.reallygreatsite.com";
-                
-                const blob = new Blob([textContent], { type: 'text/plain' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'Sandy_Wiraabdy_CV.txt';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
+                console.error("Gagal melakukan pengunduhan langsung, mencoba redirect fallback.", error);
+                // Fallback jika eksekusi tautan dinamis gagal (misalnya di lingkungan iFrame tertentu)
+                window.open(targetPdf, '_blank');
             }
+        });
+
+        // Arahkan ke WhatsApp dengan pesan khusus saat ikon headphone/kontak diklik
+        document.getElementById('contactBtn').addEventListener('click', () => {
+            const waUrl = 'https://wa.me/6282261068992?text=Hallo%20Sandy%20Saya%20merekrut%20anda';
+            window.open(waUrl, '_blank');
         });
     </script>
 </body>
