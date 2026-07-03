@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sandy Wiraabdy - Software Engineer</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;700;900&display=swap" rel="stylesheet">
+     
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+ 
+        html, body {
+            width: 100%;
+            overscroll-behavior: none;
+        }
+
+        body {
+            /* Font default utama menyerupai Cy Grotesk Wide */
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
+            background: #000;
+            color: #000;
+            overflow: hidden;
+            min-height: 100vh;
+            min-height: 100dvh; /* Mengikuti tinggi layar sebenarnya di browser mobile (address bar dinamis) */
+            -webkit-text-size-adjust: 100%;
+        }
+ 
+        .container {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+ 
+        .main-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #111;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Layer 1: Background Manga */
+        .layer-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65); /* Opasitas 65% untuk efek gelap sinematik */
+            z-index: 1;
+        }
+
+        /* Layer 2: Tulisan Nama Bertekstur */
+        .layer-name {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            max-width: 1200px;
+            z-index: 2;
+            object-fit: contain;
+            cursor: pointer;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.6s ease;
+        }
+
+        /* Efek saat Nama diklik */
+        .layer-name.float-active {
+            transform: translate(-50%, -50%) scale(1.08);
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.6));
+        }
+
+        /* Layer 3: Karakter Utama (Sandy) */
+        .layer-char {
+            position: absolute;
+            bottom: 0; /* Berpijak di bawah layar, jadi jangan digeser vertikal saat hover */
+            left: 50%;
+            transform: translateX(-50%);
+            height: 93vh; /* Diperbesar sedikit dari ukuran semula (90vh) */
+            max-height: 1040px;
+            object-fit: contain;
+            z-index: 3;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s ease;
+            transform-origin: bottom center; /* Kunci: membesar dari titik pijak kaki, bukan dari tengah, supaya kaki tetap menempel di bawah dan tidak melayang/terpotong */
+        }
+ 
+        /* Efek saat mouse diarahkan (hover) ke karakter — hanya scale, TANPA translateY,
+           supaya bagian bawah (kaki) tetap menempel di lantai dan tidak menghasilkan celah/efek melayang.
+           Dibatasi ke perangkat yang punya mouse asli, supaya di HP (touch) tidak "nyangkut" aktif setelah disentuh. */
+        @media (hover: hover) and (pointer: fine) {
+            .layer-char:hover {
+                transform: translateX(-50%) scale(1.06);
+                filter: drop-shadow(0 25px 40px rgba(0,0,0,0.8));
+            }
+        }
+
+        /* Fallback untuk HP/tablet (layar sentuh): efek muncul singkat saat disentuh, lewat class dari JS */
+        .layer-char.tap-active {
+            transform: translateX(-50%) scale(1.06);
+            filter: drop-shadow(0 25px 40px rgba(0,0,0,0.8));
+        }
+
+        .about-button {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            background: #000;
+            color: #fff;
+            padding: 14px 32px;
+            font-size: 14px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 1100; /* Selalu di atas panel dan overlay */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #000;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+ 
+        .about-button:hover {
+            background: #222;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+        }
+ 
+        .about-button.is-closing {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+ 
+        .about-button.is-closing:hover {
+            background: #f0f0f0;
+        }
+ 
+        .cv-panel {
+            position: fixed;
+            left: -80vw;
+            top: 0;
+            width: 80vw; /* Menutupi 80% layar, sisa 20% di kanan */
+            height: 100vh;
+            background: #fff;
+            z-index: 1000;
+            display: flex;
+            flex-direction: row;
+            transition: left 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+            box-shadow: 20px 0 60px rgba(0,0,0,0.5);
+        }
+ 
+        .cv-panel.active {
+            left: 0;
+        }
+ 
+        .cv-left {
+            width: 45%;
+            height: 100%;
+            position: relative;
+            background: #fff;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+ 
+        .cv-left img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+        }
+ 
+        .cv-right {
+            flex: 1;
+            height: 100%;
+            overflow-y: auto;
+            padding: 60px 50px 100px;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+ 
+        .cv-right::-webkit-scrollbar { width: 6px; }
+        .cv-right::-webkit-scrollbar-track { background: #fff; }
+        .cv-right::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+        .cv-right::-webkit-scrollbar-thumb:hover { background: #bbb; }
+ 
+        .cv-right-name-light {
+            font-size: 28px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.1;
+        }
+ 
+        .cv-right-name-bold {
+            font-size: 48px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
+ 
+        .cv-right-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #666;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+ 
+        .cv-objective-box {
+            background: #000;
+            color: #fff;
+            padding: 30px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative; /* acuan posisi untuk elemen pengukur (measurer) */
+            overflow: hidden; /* jaga-jaga selama measurer sempat terpasang sesaat */
+            flex-shrink: 0; /* cegah box dipaksa menyusut oleh flex parent (.cv-right) */
+            transition: min-height 0.35s ease; /* transisi halus saat tinggi disesuaikan otomatis */
+        }
+ 
+        .slider-content {
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+        .slider-content.fade-out {
+            opacity: 0;
+        }
+ 
+        .cv-objective-box h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+ 
+        .cv-objective-box p {
+            font-family: 'Inter', sans-serif; /* Pengecualian font untuk deskripsi */
+            font-size: 15px;
+            font-weight: 300;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+ 
+        .cv-dashes {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+ 
+        .cv-dash {
+            width: 30px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .cv-dash.active {
+            background: #000;
+        }
+ 
+        .cv-icons-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+ 
+        .cv-icon-btn {
+            width: 56px;
+            height: 56px;
+            background: transparent;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #000;
+        }
+ 
+        .cv-icon-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+ 
+        .cv-icon-btn.filled {
+            background: #000;
+            border-color: #000;
+            color: #fff;
+        }
+ 
+        .cv-icon-btn:hover {
+            border-color: #000;
+            transform: translateY(-2px);
+        }
+        .cv-icon-btn.filled:hover {
+            background: #333;
+            border-color: #333;
+        }
+ 
+        .cv-contact-info {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-family: 'Inter', sans-serif; /* Pengecualian font untuk alamat */
+        }
+ 
+        .cv-contact-info p {
+            font-size: 14px;
+            color: #555;
+            font-weight: 400;
+        }
+ 
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: opacity 0.5s ease;
+        }
+ 
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+ 
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+ 
+        @media (max-width: 1024px) {
+            .cv-panel { width: 90vw; left: -90vw; }
+            .cv-left { width: 40%; }
+            .cv-right-name-bold { font-size: 38px; }
+            .layer-char { height: 88vh; }
+        }
+ 
+        @media (max-width: 768px) {
+            .cv-panel { width: 100vw; left: -100vw; flex-direction: column; }
+            .cv-left { width: 100%; height: 32vh; flex-shrink: 0; }
+            .cv-right {
+                padding: 24px 20px 40px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .cv-right-name-light { font-size: 20px; }
+            .cv-right-name-bold { font-size: 32px; }
+            .cv-right-title { font-size: 12px; letter-spacing: 2px; margin-bottom: 20px; }
+            .cv-objective-box { padding: 22px; min-height: 150px; }
+            .cv-objective-box h3 { font-size: 17px; }
+            .cv-objective-box p { font-size: 14px; }
+            .about-button {
+                bottom: 18px;
+                right: 18px;
+                padding: 12px 22px;
+                font-size: 13px;
+            }
+            .layer-char { height: 72vh; }
+            .layer-name { width: 92%; }
+            .cv-icon-btn { width: 48px; height: 48px; }
+        }
+
+        /* HP kecil / potret sempit */
+        @media (max-width: 480px) {
+            .layer-char { height: 64vh; }
+            .layer-name { width: 96%; }
+            .cv-left { height: 26vh; }
+            .cv-right { padding: 20px 16px 36px; }
+            .cv-right-name-bold { font-size: 26px; }
+            .cv-objective-box { padding: 18px; min-height: 130px; }
+            .cv-contact-info p { font-size: 12px; }
+            .about-button { bottom: 14px; right: 14px; padding: 10px 18px; font-size: 12px; }
+            .cv-icon-btn { width: 44px; height: 44px; }
+            .cv-icon-btn svg { width: 20px; height: 20px; }
+        }
+
+        /* Landscape di HP: tinggi layar terbatas, sesuaikan supaya char tidak kepotong */
+        @media (max-height: 480px) and (orientation: landscape) {
+            .layer-char { height: 82vh; }
+            .cv-left { height: 100%; width: 30%; }
+            .cv-panel { flex-direction: row; }
+            .cv-right { padding: 20px 24px; }
+        }
+
+        /* Pastikan area sentuh tombol tetap nyaman meski desain kecil */
+        .about-button, .cv-icon-btn, .cv-dash {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="container">
+        <div class="main-content">
+            <!-- Layer 1: Background Manga -->
+            <img src="bg.png" alt="Manga Background" class="layer-bg" onerror="this.src='https://placehold.co/1920x1080/111/333?text=bg.png+Missing'">
+            
+            <div class="bg-overlay"></div>
+            
+            <!-- Layer 2: Tulisan Nama -->
+            <img src="nama.png" alt="Sandy Wiraabdy Text" class="layer-name" id="layerName" onerror="this.src='https://placehold.co/1200x400/transparent/eee?text=nama.png+Missing'">
+            
+            <!-- Layer 3: Karakter Utama (kini bereaksi saat di-hover, bukan diklik) -->
+            <img src="char.png" alt="Sandy Wiraabdy Character" class="layer-char" id="layerChar" onerror="this.src='https://placehold.co/600x1000/transparent/999?text=char.png+Missing'">
+        </div>
+    </div>
+ 
+    <!-- Tombol Universal -->
+    <button class="about-button" id="aboutBtn">About</button>
+ 
+    <div class="cv-panel" id="cvPanel">
+        <!-- Kolom Kiri: Menggunakan char1.png sesuai permintaan -->
+        <div class="cv-left">
+            <img src="char1.png" id="panelCharImg" alt="Sandy" onerror="this.src='https://placehold.co/800x1200/eee/999?text=char1.png+Missing'">
+        </div>
+ 
+        <!-- Kolom Kanan: Detail Profil -->
+        <div class="cv-right">
+            <div class="cv-right-name-light">SANDY</div>
+            <div class="cv-right-name-bold">WIRAAABDY</div>
+            <div class="cv-right-name-bold">PELONG</div>
+            <div class="cv-right-title">Software Engineer</div>
+ 
+            <!-- Kotak Slider Dinamis -->
+            <div class="cv-objective-box">
+                <div class="slider-content" id="sliderContent">
+                    <h3 id="slideTitle">Objective</h3>
+                    <p id="slideDesc">An aspiring software engineer looking to leverage programming skills and individual project experience within a collaborative, idea-driven work environment.</p>
+                </div>
+            </div>
+ 
+            <div class="cv-dashes" id="dashContainer">
+                <span class="cv-dash active" data-index="0"></span>
+                <span class="cv-dash" data-index="1"></span>
+                <span class="cv-dash" data-index="2"></span>
+                <span class="cv-dash" data-index="3"></span>
+                <span class="cv-dash" data-index="4"></span>
+            </div>
+ 
+            <!-- Ikon SVG Modern -->
+            <div class="cv-icons-row">
+                <!-- Headphone Icon (SVG) -->
+                <button class="cv-icon-btn" title="Contact">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                    </svg>
+                </button>
+                <!-- Download Icon (SVG) -->
+                <button class="cv-icon-btn filled" title="Download CV" id="downloadBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+            </div>
+ 
+            <div class="cv-contact-info">
+                <p>Kalumbatan, Indonesia.</p>
+                <p>+62 822-6106-8992</p>
+                <p>sandybojes223@gmail.com</p>
+                <p>www.reallygreatsite.com</p>
+            </div>
+        </div>
+    </div>
+ 
+    <script>
+        const aboutBtn = document.getElementById('aboutBtn');
+        const cvPanel = document.getElementById('cvPanel');
+        const overlay = document.getElementById('overlay');
+ 
+        const layerName = document.getElementById('layerName');
+        const layerChar = document.getElementById('layerChar');
+
+        // Nama (nama.png) tetap pakai efek klik seperti sebelumnya
+        layerName.addEventListener('click', () => {
+            layerName.classList.toggle('float-active');
+        });
+
+        // Char (char.png): di desktop efeknya murni CSS hover (.layer-char:hover).
+        // Di HP/tablet (layar sentuh) tidak ada event hover, jadi kita berikan efek
+        // singkat saat disentuh (tap) lewat class 'tap-active', lalu otomatis hilang lagi.
+        const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+        if (isTouchDevice) {
+            let tapTimeout;
+            layerChar.addEventListener('touchstart', () => {
+                layerChar.classList.add('tap-active');
+                clearTimeout(tapTimeout);
+            }, { passive: true });
+
+            layerChar.addEventListener('touchend', () => {
+                tapTimeout = setTimeout(() => {
+                    layerChar.classList.remove('tap-active');
+                }, 350);
+            }, { passive: true });
+        }
+ 
+        // Panel Toggles
+        function openPanel() {
+            cvPanel.classList.add('active');
+            overlay.classList.add('active');
+            aboutBtn.textContent = 'Close';
+            aboutBtn.classList.add('is-closing');
+        }
+ 
+        function closePanel() {
+            cvPanel.classList.remove('active');
+            overlay.classList.remove('active');
+            aboutBtn.textContent = 'About';
+            aboutBtn.classList.remove('is-closing');
+        }
+ 
+        aboutBtn.addEventListener('click', () => {
+            if (cvPanel.classList.contains('active')) {
+                closePanel();
+            } else {
+                openPanel();
+            }
+        });
+ 
+        overlay.addEventListener('click', closePanel);
+ 
+        // Slider Data
+        const cvData = [
+            {
+                title: "Objective",
+                desc: "An aspiring software engineer looking to leverage programming skills and individual project experience within a collaborative, idea-driven work environment."
+            },
+            {
+                title: "Experience",
+                desc: "Freelance Frontend Developer. Created responsive web apps using React and TailwindCSS. Optimized loading times by 30% for various client portfolios."
+            },
+            {
+                title: "Education",
+                desc: "Bachelor's Degree in Computer Science. Focus on Software Engineering, Data Structures, and User Interface Design. Graduated with Honors."
+            },
+            {
+                title: "Projects",
+                desc: "Built a Manga Reading Web App featuring infinite scroll and dynamic rendering. Developed an E-Commerce dashboard using Next.js."
+            },
+            {
+                title: "Volunteer Experience",
+                desc: "Mentored high school students in basic web development. Organized local tech meetups and hackathons to build a stronger community."
+            }
+        ];
+ 
+        let currentSlide = 0;
+        const sliderContent = document.getElementById('sliderContent');
+        const slideTitle = document.getElementById('slideTitle');
+        const slideDesc = document.getElementById('slideDesc');
+        const dashes = document.querySelectorAll('.cv-dash');
+        const objectiveBox = document.querySelector('.cv-objective-box');
+
+        // --- Penyesuai Tinggi Otomatis ---
+        // Mengukur tinggi kalimat TERPANJANG di antara semua slide, lalu mengunci
+        // min-height box sebesar itu. Dengan begini box selalu cukup besar untuk
+        // menampung slide apa pun (Objective, Experience, dst) tanpa ada teks yang
+        // keluar/terpotong dari panel hitam, di breakpoint/ukuran layar manapun.
+        function calcOptimalBoxHeight() {
+            if (!objectiveBox) return;
+
+            const style = getComputedStyle(objectiveBox);
+            const paddingTop = parseFloat(style.paddingTop) || 0;
+            const paddingBottom = parseFloat(style.paddingBottom) || 0;
+            const paddingLeft = parseFloat(style.paddingLeft) || 0;
+            const paddingRight = parseFloat(style.paddingRight) || 0;
+
+            // Elemen sementara untuk mengukur, ditempatkan di dalam box itu sendiri
+            // supaya otomatis mewarisi aturan CSS ".cv-objective-box h3/p" yang
+            // berlaku di breakpoint saat ini (desktop/tablet/mobile).
+            const measurer = document.createElement('div');
+            measurer.style.position = 'absolute';
+            measurer.style.visibility = 'hidden';
+            measurer.style.pointerEvents = 'none';
+            measurer.style.top = '0';
+            measurer.style.left = '0';
+            measurer.style.width = `calc(100% - ${paddingLeft + paddingRight}px)`;
+            objectiveBox.appendChild(measurer);
+
+            let maxContentHeight = 0;
+            cvData.forEach(item => {
+                const h3 = document.createElement('h3');
+                h3.textContent = item.title;
+                const p = document.createElement('p');
+                p.textContent = item.desc;
+
+                measurer.innerHTML = '';
+                measurer.appendChild(h3);
+                measurer.appendChild(p);
+
+                maxContentHeight = Math.max(maxContentHeight, measurer.scrollHeight);
+            });
+
+            objectiveBox.removeChild(measurer);
+
+            const fallbackMin = 180; // jaring pengaman minimum
+            const optimalHeight = Math.max(fallbackMin, maxContentHeight + paddingTop + paddingBottom);
+            objectiveBox.style.minHeight = optimalHeight + 'px';
+        }
+
+        // Hitung setelah load awal
+        calcOptimalBoxHeight();
+        window.addEventListener('load', calcOptimalBoxHeight);
+
+        // Hitung ulang setelah font custom (Space Grotesk/Inter) selesai dimuat,
+        // karena lebar/tinggi teks bisa berubah begitu font aslinya aktif.
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(calcOptimalBoxHeight);
+        }
+
+        // Hitung ulang saat ukuran layar berubah (mis. putar HP, resize desktop),
+        // dengan debounce supaya tidak dipanggil berlebihan.
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(calcOptimalBoxHeight, 200);
+        });
+ 
+        // Update Slider Function
+        function updateSlide(index) {
+            currentSlide = index;
+            sliderContent.classList.add('fade-out');
+            
+            setTimeout(() => {
+                slideTitle.textContent = cvData[index].title;
+                slideDesc.textContent = cvData[index].desc;
+                
+                dashes.forEach(d => d.classList.remove('active'));
+                dashes[index].classList.add('active');
+                
+                sliderContent.classList.remove('fade-out');
+            }, 400); 
+        }
+ 
+        dashes.forEach((dash, idx) => {
+            dash.addEventListener('click', () => {
+                updateSlide(idx);
+                resetInterval();
+            });
+        });
+ 
+        let slideInterval = setInterval(() => {
+            let nextIndex = (currentSlide + 1) % cvData.length;
+            updateSlide(nextIndex);
+        }, 5000);
+ 
+        function resetInterval() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(() => {
+                let nextIndex = (currentSlide + 1) % cvData.length;
+                updateSlide(nextIndex);
+            }, 5000);
+        }
+ 
+        // PDF Auto-Generator Logic
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+ 
+                // Header PDF
+                doc.setFillColor(0, 0, 0); 
+                doc.rect(0, 0, 210, 40, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(24);
+                doc.text("SANDY WIRAAABDY PELONG", 105, 20, null, null, "center");
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(12);
+                doc.text("Software Engineer", 105, 30, null, null, "center");
+ 
+                // Content PDF
+                doc.setTextColor(0, 0, 0);
+                let yPos = 60;
+                
+                cvData.forEach(item => {
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(14);
+                    doc.text(item.title.toUpperCase(), 20, yPos);
+                    yPos += 8;
+                    
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(20, yPos, 190, yPos);
+                    yPos += 8;
+ 
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(11);
+                    const splitText = doc.splitTextToSize(item.desc, 170);
+                    doc.text(splitText, 20, yPos);
+                    
+                    yPos += (splitText.length * 6) + 12;
+                });
+ 
+                // Footer PDF
+                doc.setFillColor(240, 240, 240);
+                doc.rect(0, 270, 210, 27, 'F');
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.text("CONTACT", 105, 278, null, null, "center");
+                
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(9);
+                doc.text("Kalumbatan, Indonesia | +62 822-6106-8992 | sandybojes223@gmail.com | www.reallygreatsite.com", 105, 285, null, null, "center");
+ 
+                doc.save('Sandy_Wiraabdy_CV.pdf');
+                
+            } catch (error) {
+                console.error("PDF Library gagal dimuat. Fallback ke TXT.", error);
+                
+                // Fallback TXT Download
+                let textContent = "SANDY WIRAAABDY PELONG\nSoftware Engineer\n\n";
+                cvData.forEach(item => {
+                    textContent += `[ ${item.title.toUpperCase()} ]\n${item.desc}\n\n`;
+                });
+                textContent += "CONTACT:\nKalumbatan, Indonesia.\n+62 822-6106-8992\nsandybojes223@gmail.com\nwww.reallygreatsite.com";
+                
+                const blob = new Blob([textContent], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Sandy_Wiraabdy_CV.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>
